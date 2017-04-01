@@ -12,6 +12,7 @@
 #include <uSTimer2.h>
 #include <Wire.h>
 #include <I2CEncoder.h>
+#include <IRLib.h>
 
 #include "locatewall.h"
 #include "retrievecube.h"
@@ -29,6 +30,10 @@ Servo servo_MagnetMotor;
 //Encoders
 I2CEncoder encoder_RightTrackMotor;
 I2CEncoder encoder_LeftTrackMotor;
+
+//IR Receiver
+IRrecv My_Receiver(ci_IR_Sensor);
+IRdecode My_Decoder;
 
 //Ports
 const int ci_Right_Track_Motor = 8;
@@ -116,6 +121,8 @@ void setup() {
   pinMode(ci_Ultrasonic_Data_Side_2, INPUT);
   pinMode(ci_Ultrasonic_Ping_Back, OUTPUT);
   pinMode(ci_Ultrasonic_Data_Back, INPUT);
+
+  My_Receiver.enableIRIn(); //Start receiver
 }
 
 void loop() {
