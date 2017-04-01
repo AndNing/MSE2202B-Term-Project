@@ -52,10 +52,10 @@ const int ci_Enable_Switch;
 
 const int ci_Ultrasonic_Ping_Top = 2;
 const int ci_Ultrasonic_Data_Top = 3;
-const int ci_Ultrasonic_Ping_Side_1;
-const int ci_Ultrasonic_Data_Side_1;
-const int ci_Ultrasonic_Ping_Side_2;
-const int ci_Ultrasonic_Data_Side_2;
+const int ci_Ultrasonic_Ping_Side_1 = 4;
+const int ci_Ultrasonic_Data_Side_1 = 5;
+const int ci_Ultrasonic_Ping_Side_2 = 6;
+const int ci_Ultrasonic_Data_Side_2 = 7;
 const int ci_Ultrasonic_Ping_Back = 4;
 const int ci_Ultrasonic_Data_Back = 5;
 
