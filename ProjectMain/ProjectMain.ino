@@ -81,6 +81,8 @@ unsigned int ui_Right_Track;
 long l_Left_Track_Position;
 long l_Right_Track_Position;
 
+int inByte = 0;
+
 unsigned int ui_Current_Task = 1;
 unsigned int ui_Turn_Difference;
 
@@ -90,6 +92,10 @@ bool bt_Enabled;
 void setup() {
   Wire.begin();
   Serial.begin(9600);
+
+  while (!Serial) {
+    //wait for serial port to conect. Needed for native USB port only
+  }
 
   pinMode(ci_Enable_Switch, OUTPUT);
   pinMode(ci_Right_Track_Motor, OUTPUT);
@@ -123,6 +129,8 @@ void setup() {
   pinMode(ci_Ultrasonic_Data_Back, INPUT);
 
   My_Receiver.enableIRIn(); //Start receiver
+
+  pinMode (A0, INPUT);
 }
 
 void loop() {
