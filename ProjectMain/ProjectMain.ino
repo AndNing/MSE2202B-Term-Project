@@ -31,18 +31,29 @@ I2CEncoder encoder_RightTrackMotor;
 I2CEncoder encoder_LeftTrackMotor;
 
 //Ports
-const int ci_Right_Track_Motor;
-const int ci_Left_Track_Motor;
-const int ci_Lift_Motor;
-const int ci_Arm_Motor;
-const int ci_Magnet_Motor;
-const int ci_Cube_Force_Sensor;
-const int ci_Pyramid_Force_Sensor;
-const int ci_IR_Sensor;
+const int ci_Right_Track_Motor = 8;
+const int ci_Left_Track_Motor = 9;
+const int ci_Lift_Motor = 12;
+const int ci_Arm_Motor = 10;
+const int ci_Magnet_Motor = 11;
+
+//const int ci_Cube_Force_Sensor;
+//const int ci_Pyramid_Force_Sensor;
+const int ci_IR_Sensor = 5;
+const int ci_IR_Sensor2 = 6;
+
 const int ci_Start_Button;
 const int ci_Enable_Switch;
-const int ci_Ultrasonic_Ping;
-const int ci_Ultrasonic_Data;
+
+const int ci_Ultrasonic_Ping_Top = 2;
+const int ci_Ultrasonic_Data_Top = 3;
+const int ci_Ultrasonic_Ping_Side_1;
+const int ci_Ultrasonic_Data_Side_1;
+const int ci_Ultrasonic_Ping_Side_2;
+const int ci_Ultrasonic_Data_Side_2;
+const int ci_Ultrasonic_Ping_Back = 4;
+const int ci_Ultrasonic_Data_Back = 5;
+
 const int ci_I2C_SDA;
 const int ci_I2C_SCL;
 
@@ -97,8 +108,14 @@ void setup() {
   pinMode(ci_IR_Sensor, INPUT);
   pinMode(ci_Pyramid_Force_Sensor, INPUT);
   pinMode(ci_Cube_Force_Sensor, INPUT);
-  pinMode(ci_Ultrasonic_Ping, OUTPUT);
-  pinMode(ci_Ultrasonic_Data, INPUT);
+  pinMode(ci_Ultrasonic_Ping_Top, OUTPUT);
+  pinMode(ci_Ultrasonic_Data_Top, INPUT);
+  pinMode(ci_Ultrasonic_Ping_Side_1, OUTPUT);
+  pinMode(ci_Ultrasonic_Data_Side_1, INPUT);
+  pinMode(ci_Ultrasonic_Ping_Side_2, OUTPUT);
+  pinMode(ci_Ultrasonic_Data_Side_2, INPUT);
+  pinMode(ci_Ultrasonic_Ping_Back, OUTPUT);
+  pinMode(ci_Ultrasonic_Data_Back, INPUT);
 }
 
 void loop() {
