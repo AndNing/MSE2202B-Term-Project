@@ -156,6 +156,125 @@ void loop() {
 }
 
 
+void PingTop()
+{
+  //Ping Ultrasonic
+  //Send the Ultrasonic Range Finder a 10 microsecond pulse per tech spec
+  digitalWrite(ci_Ultrasonic_Ping_Top, HIGH);
+  delayMicroseconds(10);  //The 10 microsecond pause where the pulse in "high"
+  digitalWrite(ci_Ultrasonic_Ping_Top, LOW);
+  //use command pulseIn to listen to Ultrasonic_Data pin to record the
+  //time that it takes from when the Pin goes HIGH until it goes LOW 
+  ul_Echo_Time_Top = pulseIn(ci_Ultrasonic_Data_Top, HIGH, 10000);
+
+}
+
+void PingSideFront()
+{
+  //Ping Ultrasonic
+  //Send the Ultrasonic Range Finder a 10 microsecond pulse per tech spec
+  digitalWrite(ci_Ultrasonic_Ping_Side_Front, HIGH);
+  delayMicroseconds(10);  //The 10 microsecond pause where the pulse in "high"
+  digitalWrite(ci_Ultrasonic_Ping_Side_Front, LOW);
+  //use command pulseIn to listen to Ultrasonic_Data pin to record the
+  //time that it takes from when the Pin goes HIGH until it goes LOW 
+  ul_Echo_Time_Side_Front = pulseIn(ci_Ultrasonic_Data_Side_Front, HIGH, 10000);
+
+}
+
+void PingSideBack()
+{
+  //Ping Ultrasonic
+  //Send the Ultrasonic Range Finder a 10 microsecond pulse per tech spec
+  digitalWrite(ci_Ultrasonic_Ping_Side_Back, HIGH);
+  delayMicroseconds(10);  //The 10 microsecond pause where the pulse in "high"
+  digitalWrite(ci_Ultrasonic_Ping_Side_Back, LOW);
+  //use command pulseIn to listen to Ultrasonic_Data pin to record the
+  //time that it takes from when the Pin goes HIGH until it goes LOW 
+  ul_Echo_Time_Side_Back = pulseIn(ci_Ultrasonic_Data_Side_Back, HIGH, 10000);
+
+}  
+
+void receiveEvent(int howMany){
+    int c = (int(Wire.read()))*5;
+    Serial.println(c);
+}
+
+void DriveToGetCube(){
+
+  GetUltrasonicValues();
+  
+  if((ul_Echo_Time_Side_Front_Val>=(frontUltraVal-20))&&(ul_Echo_Time_Side_Front_Val<=(frontUltraVal+20))&&(ul_Echo_Time_Side_Back_Val>=(backUltraVal-20))&&(ul_Echo_Time_Side_Back_Val<=(backUltraVal+20))){
+      servo_LeftMotor.writeMicroseconds(ui_Left_Motor_Speed_Cube);
+      servo_RightMotor.writeMicroseconds(ui_Right_Motor_Speed_Cube);
+      Serial.println("STRAIGHT");
+  }
+
+  else if((ul_Echo_Time_Side_Back_Val <(backUltraVal-20))&&(ul_Echo_Time_Side_Front_Val>=(frontUltraVal-20))){
+      servo_LeftMotor.writeMicroseconds(ui_Left_Motor_Speed_Cube);
+      servo_RightMotor.writeMicroseconds(1380);
+      Serial.println("TURN RIGHT");
+  }
+
+  else if((ul_Echo_Time_Side_Front_Val<(frontUltraVal-20))&&(ul_Echo_Time_Side_Back_Val>=(backUltraVal-20))){
+      servo_LeftMotor.writeMicroseconds(1380);
+      servo_RightMotor.writeMicroseconds(ui_Right_Motor_Speed_Cube);
+      Serial.println("TURN LEFT");
+  }
+  
+  else if(((ul_Echo_Time_Side_Front_Val)<(frontUltraVal-20))&&((ul_Echo_Time_Side_Back_Val)<(backUltraVal-20))){
+      servo_LeftMotor.writeMicroseconds(ui_Left_Motor_Speed_Cube);
+      servo_RightMotor.writeMicroseconds(1380);
+      Serial.println("TURN RIGHT");
+  }
+
+  else if((ul_Echo_Time_Side_Front_Val>(frontUltraVal+20))&&(ul_Echo_Time_Side_Back_Val>(backUltraVal+20))){
+      servo_LeftMotor.writeMicroseconds(1380);
+      servo_RightMotor.writeMicroseconds(ui_Right_Motor_Speed_Cube);
+      Serial.println("TURN LEFT");
+  }
+}
+
+void CallibrateUltrasonics(){
+  for(int i = 0; i<41;i++){
+    PingSideFront();
+    PingSideBack();
+    
+    if(i>0){
+      backUltraVal = backUltraVal + ul_Echo_Time_Side_Back;
+      frontUltraVal = frontUltraVal + ul_Echo_Time_Side_Front;
+    }
+    
+    delay(50);
+    
+  }
+
+  backUltraVal = backUltraVal/40;
+  frontUltraVal = frontUltraVal/40;
+  
+}
+
+void GetUltrasonicValues(){
+
+  ul_Echo_Time_Side_Back_Val = 0;
+  ul_Echo_Time_Side_Front_Val = 0;
+  
+  for (int i = 0; i<41;i++){
+    PingSideFront();
+    PingSideBack();
+    delay(2);
+    if(i>0){
+      ul_Echo_Time_Side_Back_Val = ul_Echo_Time_Side_Back_Val + ul_Echo_Time_Side_Back;
+      ul_Echo_Time_Side_Front_Val = ul_Echo_Time_Side_Front_Val + ul_Echo_Time_Side_Front;
+    }
+  }
+
+  ul_Echo_Time_Side_Back_Val = (ul_Echo_Time_Side_Back_Val)/40;
+  ul_Echo_Time_Side_Front_Val = (ul_Echo_Time_Side_Front_Val)/40;
+}
+
+
+
 
 
 
