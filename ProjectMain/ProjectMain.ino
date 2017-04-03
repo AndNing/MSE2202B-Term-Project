@@ -12,7 +12,6 @@
 #include <uSTimer2.h>
 #include <Wire.h>
 #include <I2CEncoder.h>
-#include <IRLib.h>
 
 #include "locatewall.h"
 #include "retrievecube.h"
@@ -31,14 +30,10 @@ Servo servo_MagnetMotor;
 I2CEncoder encoder_RightTrackMotor;
 I2CEncoder encoder_LeftTrackMotor;
 
-//IR Receiver
-IRrecv My_Receiver(ci_IR_Sensor);
-IRdecode My_Decoder;
-
 //Ports
 const int ci_Right_Track_Motor = 8;
 const int ci_Left_Track_Motor = 9;
-const int ci_Lift_Motor = 12;
+const int ci_Shovel_Motor = 12;
 const int ci_Arm_Motor = 10;
 const int ci_Magnet_Motor = 11;
 
@@ -52,12 +47,10 @@ const int ci_Enable_Switch;
 
 const int ci_Ultrasonic_Ping_Top = 2;
 const int ci_Ultrasonic_Data_Top = 3;
-const int ci_Ultrasonic_Ping_Side_1 = 4;
-const int ci_Ultrasonic_Data_Side_1 = 5;
-const int ci_Ultrasonic_Ping_Side_2 = 6;
-const int ci_Ultrasonic_Data_Side_2 = 7;
-const int ci_Ultrasonic_Ping_Back = 4;
-const int ci_Ultrasonic_Data_Back = 5;
+const int ci_Ultrasonic_Ping_Side_Back = 4;
+const int ci_Ultrasonic_Data_Side_Back = 5;
+const int ci_Ultrasonic_Ping_Side_Front = 6;
+const int ci_Ultrasonic_Data_Side_Front = 7;
 
 const int ci_I2C_SDA;
 const int ci_I2C_SCL;
@@ -82,6 +75,9 @@ long l_Left_Track_Position;
 long l_Right_Track_Position;
 
 int inByte = 0;
+int val = 0;
+int count = 0;
+int check = 0;
 
 unsigned int ui_Current_Task = 1;
 unsigned int ui_Turn_Difference;
@@ -273,7 +269,104 @@ void GetUltrasonicValues(){
   ul_Echo_Time_Side_Front_Val = (ul_Echo_Time_Side_Front_Val)/40;
 }
 
+void FindPyramid(){
 
+  val = 0;
+
+  if (count == 0){
+
+    while(check != 0){
+      if(Serial.read() == -1){
+        check = 0;
+      }
+    }
+
+    if (Serial.available()>0){
+      val = Serial.read();
+    }
+
+    Serial.println(val);
+
+    servo_LeftMotor.writeMicroseconds(1650);
+    servo_RightMotor.writeMicroseconds(1380);
+
+    if ((val == 69) || (val == 65)){
+
+      servo_LeftMotor.writeMicroseconds(1500);
+      servo_RightMotor.writeMicroseconds(1500);
+
+      count = 1;
+
+      refTime = millis();
+  
+    }
+  
+  }
+
+  if (count == 1){
+
+    while((millis()-refTime)<2000){
+      servo_LeftMotor.writeMicroseconds(1680);
+      servo_RightMotor.writeMicroseconds(1680);
+
+      PingTop();
+
+      if(ul_Echo_Time_Top>2000){
+        countTwo = 1;
+        break;
+      }
+      
+    }
+
+    count++;
+
+    refTime = millis();
+
+  }
+
+  if (countTwo == 1){
+
+    while(1 == 1){
+      servo_LeftMotor.writeMicroseconds(1500);
+      servo_RightMotor.writeMicroseconds(1500);
+    }
+  
+  }
+
+  if (count == 2){
+
+  //Serial.println("Turn 2");
+  
+    while((millis()-refTime)<1000){
+      servo_LeftMotor.writeMicroseconds(1350);
+      servo_RightMotor.writeMicroseconds(1680);
+
+      PingTop();
+
+      if(ul_Echo_Time_Top>2000){
+        countTwo = 1;
+        break;
+      }
+    
+    }
+
+    count = 0;
+
+    Serial.write(inByte);
+
+    check = 1;
+  }
+
+  if (countTwo == 1){
+
+    while(1 == 1){
+      servo_LeftMotor.writeMicroseconds(1500);
+      servo_RightMotor.writeMicroseconds(1500);
+    }
+  
+  }
+
+}
 
 
 
