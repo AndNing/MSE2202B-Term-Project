@@ -116,11 +116,11 @@ void loop() {
     CallibrateUltrasonics();
     countOut++;
     servo_Platform.write(105);
-    servo_Shovel.write(180);
+    servo_Shovel.write(160);
     servo_Stopper.write(75);
   }
   
-  /*switch(countOut){
+  switch(countOut){
 
     case 1:{
 
@@ -165,10 +165,10 @@ void loop() {
 
       break;
       
-    }*/
+    }
 
-    //case 3:{
-    if(countOut == 1){
+    case 3:{
+
       FindPyramid();
 
       if (countTwo == 1){
@@ -178,10 +178,11 @@ void loop() {
         servo_RightMotor.writeMicroseconds(1500);
       }
 
-      //break;
+      break;
     }
 
-    if(countOut == 2){
+    case 4:{
+    
       PickUpPyramid();
 
       if (countTwo == 1){
@@ -189,38 +190,17 @@ void loop() {
         Serial.println("YES");
       }
 
-      //break;
-    }
-
-      
-   // }
-
-    /*case 4:{
-    
-      Serial.println("case 5");
-      
-      servo_LeftMotor.writeMicroseconds(1500);
-      servo_RightMotor.writeMicroseconds(1500);
-
-      servo_Shovel.write(77);
-
-      delay(3000);
-
-      count++;
-
-      refTime = millis();
-
       break;
       
     }
 
-    case 5:{
+    case 5:{//Drop off cube and lower pyramid onto it
     
       while((millis()-refTime)<1500){
         servo_LeftMotor.writeMicroseconds(1650);
         servo_RightMotor.writeMicroseconds(1650);
         servo_Shovel.write(77);
-      }
+    }
 
       while((millis()-refTime)<2500){
         servo_LeftMotor.writeMicroseconds(1430);
@@ -249,6 +229,7 @@ void loop() {
 
   }*/
   //}
+}
 }
 
 
@@ -387,8 +368,8 @@ void FindPyramid(){
 
     Serial.println(val);
 
-    servo_LeftMotor.writeMicroseconds(1650);
-    servo_RightMotor.writeMicroseconds(1380);
+    servo_LeftMotor.writeMicroseconds(1380);
+    servo_RightMotor.writeMicroseconds(1650);
 
     if ((val == 69) || (val == 65)){
 
@@ -412,7 +393,7 @@ void FindPyramid(){
       }
 
     
-    while((millis()-refTime)<2000){
+    while((millis()-refTime)<1500){
       servo_LeftMotor.writeMicroseconds(1680);
       servo_RightMotor.writeMicroseconds(1680);
 
@@ -420,7 +401,7 @@ void FindPyramid(){
 
       Serial.println(ul_Echo_Time_Top);
 
-      if((ul_Echo_Time_Top>1500)||(ul_Echo_Time_Top == 0)){
+      if((ul_Echo_Time_Top>1050)||(ul_Echo_Time_Top == 0)){
         countTwo = 1;
         count = -5;
         break;
@@ -446,8 +427,8 @@ void FindPyramid(){
     }
       
     while((millis()-refTime)<1300){
-      servo_LeftMotor.writeMicroseconds(1350);
-      servo_RightMotor.writeMicroseconds(1680);
+      servo_LeftMotor.writeMicroseconds(1680);
+      servo_RightMotor.writeMicroseconds(1350);
 
       PingTop();
 
@@ -483,33 +464,53 @@ void GetCubeInCorner(){
 
 void PickUpPyramid(){
   
-  servo_Shovel.write(75);
+  servo_Shovel.write(30);
   delay(1000);
 
+  refTime = millis();
+  
   while(analogRead(A1)<100){
-  servo_LeftMotor.writeMicroseconds(1630);
-  servo_RightMotor.writeMicroseconds(1630);
+    
+    if((millis()-refTime)<1000){
+      
+      servo_LeftMotor.writeMicroseconds(1600);
+      servo_RightMotor.writeMicroseconds(1600);
+
+    }
+
+    else if((millis()-refTime)<1200){
+      servo_LeftMotor.writeMicroseconds(1350);
+      servo_RightMotor.writeMicroseconds(1680);
+    }
+
+    else if((millis()-refTime)<1400){
+      servo_LeftMotor.writeMicroseconds(1680);
+      servo_RightMotor.writeMicroseconds(1350);
+    }
+
+    else if((millis()-refTime)>1400){
+      refTime = millis();
+    }
+    
   }
 
   servo_LeftMotor.writeMicroseconds(1500);
   servo_RightMotor.writeMicroseconds(1500);
-
+  servo_Stopper.write(35);
   delay(1000);
   
   refTime = millis();
 
   while((millis()-refTime)<1000){
-    servo_LeftMotor.writeMicroseconds(1400);
-    servo_RightMotor.writeMicroseconds(1400);
+    servo_LeftMotor.writeMicroseconds(1420);
+    servo_RightMotor.writeMicroseconds(1420);
   }
   
   servo_LeftMotor.writeMicroseconds(1500);
   servo_RightMotor.writeMicroseconds(1500);
-  
-  servo_Stopper.write(35);
   delay(1000);
 
-   for (pos = 75; pos <= 180; pos++) { // goes from 0 degrees to 180 degrees
+   for (pos = 38; pos <= 180; pos++) { // goes from 0 degrees to 180 degrees
     // in steps of 1 degree
     servo_Shovel.write(pos);             // tell servo to go to position in variable 'pos'
     delay(30);                       // waits 15ms for the servo to reach the position
