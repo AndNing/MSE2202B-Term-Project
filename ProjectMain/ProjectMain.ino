@@ -8,42 +8,15 @@
  */
 
 
-#include <Servo.h>
-#include <uSTimer2.h>
 #include <Wire.h>
-#include <I2CEncoder.h>
+#include <Servo.h>
 
-#include "locatewall.h"
-#include "retrievecube.h"
-#include "locatepyramid.h"
-#include "retrievepyramid.h"
-#include "converttesseract.h"
-
-//Servo Motors
-Servo servo_RightTrackMotor;
-Servo servo_LeftTrackMotor;
-Servo servo_LiftMotor;
-Servo servo_ArmMotor;
-Servo servo_MagnetMotor;
-
-//Encoders
-I2CEncoder encoder_RightTrackMotor;
-I2CEncoder encoder_LeftTrackMotor;
-
-//Ports
-const int ci_Right_Track_Motor = 8;
-const int ci_Left_Track_Motor = 9;
-const int ci_Shovel_Motor = 12;
-const int ci_Arm_Motor = 10;
-const int ci_Magnet_Motor = 11;
-
-//const int ci_Cube_Force_Sensor;
-//const int ci_Pyramid_Force_Sensor;
-const int ci_IR_Sensor = 5;
-const int ci_IR_Sensor2 = 6;
-
-const int ci_Start_Button;
-const int ci_Enable_Switch;
+Servo servo_RightMotor;
+Servo servo_LeftMotor;
+Servo servo_Platform;
+Servo servo_Magnet;
+Servo servo_Shovel;
+Servo servo_Stopper;
 
 const int ci_Ultrasonic_Ping_Top = 2;
 const int ci_Ultrasonic_Data_Top = 3;
@@ -51,104 +24,231 @@ const int ci_Ultrasonic_Ping_Side_Back = 4;
 const int ci_Ultrasonic_Data_Side_Back = 5;
 const int ci_Ultrasonic_Ping_Side_Front = 6;
 const int ci_Ultrasonic_Data_Side_Front = 7;
+const int ci_Right_Motor = 8;
+const int ci_Left_Motor = 9;
+const int ci_Platform = 10;
+const int ci_Magnet = 11;
+const int ci_Shovel = 12;
+const int ci_Stopper = 13;//75 = up, 
 
-const int ci_I2C_SDA;
-const int ci_I2C_SCL;
 
-//Constants
-const int ci_Right_Track_Stop;
-const int ci_Left_Track_Stop;
-const int ci_Lift_Motor_Raise;
-const int ci_Lift_Motor_Lower;
-const int ci_Magnet_Motor_Retract;
-const int ci_Magnet_Motor_Extend;
-const int ci_Cube_Present_Force;
-const int ci_Pyramid_Force_Present;
-const int ci_Wall_Distance;
+unsigned int ui_Left_Motor_Speed = 1585;
+unsigned int ui_Right_Motor_Speed = 1585;
+unsigned int ui_Left_Motor_Speed_Cube = 1400;
+unsigned int ui_Right_Motor_Speed_Cube = 1400;
 
-//variables
-unsigned long ul_Echo_Time;
-unsigned int ui_Track_Speed;
-unsigned int ui_Left_Track;
-unsigned int ui_Right_Track;
-long l_Left_Track_Position;
-long l_Right_Track_Position;
+unsigned long ul_Echo_Time_Top;
+unsigned long ul_Echo_Time_Side_Back = 0;
+unsigned long ul_Echo_Time_Side_Front = 0;
+unsigned long ul_Echo_Time_Side_Back_Val = 0;
+unsigned long ul_Echo_Time_Side_Front_Val = 0;
+unsigned long refTime = 0;
+unsigned long backUltraVal = 0;
+unsigned long frontUltraVal = 0;
 
-int inByte = 0;
-int val = 0;
 int count = 0;
+int pingPrev = 0;
+int val = 0;
+int lastVal=0;
+int inByte = -1;
 int check = 0;
-
-unsigned int ui_Current_Task = 1;
-unsigned int ui_Turn_Difference;
-
-bool bt_Enabled;
-
+int countTwo = 0;
+int c = 0;
+int pos = 0;
+int posTwo = 0;
+int countOut = 0;
 
 void setup() {
-  Wire.begin();
-  Serial.begin(9600);
+
+  Serial.begin(2400);
+  Wire.begin(8);
 
   while (!Serial) {
-    //wait for serial port to conect. Needed for native USB port only
+    ; // wait for serial port to connect. Needed for native USB port only
   }
 
-  pinMode(ci_Enable_Switch, OUTPUT);
-  pinMode(ci_Right_Track_Motor, OUTPUT);
-  pinMode(ci_Left_Track_Motor, OUTPUT);
-  servo_RightTrackMotor.attach(ci_Right_Track_Motor);
-  servo_LeftTrackMotor.attach(ci_Left_Track_Motor);
+  //Set-Up Cube Switch
+  pinMode(A2, INPUT);
 
-  pinMode(ci_Lift_Motor, OUTPUT);
-  pinMode(ci_Arm_Motor, OUTPUT);
-  pinMode(ci_Magnet_Motor, OUTPUT);
-  servo_LiftMotor.attach(ci_Lift_Motor);
-  servo_ArmMotor.attach(ci_Arm_Motor);
-  servo_MagnetMotor.attach(ci_Magnet_Motor);
+  //Set-Up Pyramid Switch
+  pinMode(A1, INPUT);
 
-  encoder_LeftTrackMotor.init(1.0/3.0*MOTOR_393_SPEED_ROTATIONS, MOTOR_393_TIME_DELTA);
-  encoder_LeftTrackMotor.setReversed(false);  // adjust for positive count when moving forward
-  encoder_RightTrackMotor.init(1.0/3.0*MOTOR_393_SPEED_ROTATIONS, MOTOR_393_TIME_DELTA);  
-  encoder_RightTrackMotor.setReversed(true);  // adjust for positive count when moving forward
+  //Set-Up Stopper Servo
+  pinMode(ci_Stopper, OUTPUT);
+  servo_Stopper.attach(ci_Stopper);
 
-  pinMode(ci_Start_Button, INPUT);
-  pinMode(ci_IR_Sensor, INPUT);
-  pinMode(ci_Pyramid_Force_Sensor, INPUT);
-  pinMode(ci_Cube_Force_Sensor, INPUT);
+  //Set-Up Platform Servo
+  pinMode(ci_Platform, OUTPUT);
+  servo_Platform.attach(ci_Platform);
+
+  //Set-Up Magnet Servo
+  pinMode(ci_Magnet, OUTPUT);
+  servo_Magnet.attach(ci_Magnet);
+
+  //Set-Up Shovel Servo
+  pinMode(ci_Shovel, OUTPUT);
+  servo_Shovel.attach(ci_Shovel);
+ 
+  //Set Up Ultrasonic Sensors
   pinMode(ci_Ultrasonic_Ping_Top, OUTPUT);
   pinMode(ci_Ultrasonic_Data_Top, INPUT);
-  pinMode(ci_Ultrasonic_Ping_Side_1, OUTPUT);
-  pinMode(ci_Ultrasonic_Data_Side_1, INPUT);
-  pinMode(ci_Ultrasonic_Ping_Side_2, OUTPUT);
-  pinMode(ci_Ultrasonic_Data_Side_2, INPUT);
-  pinMode(ci_Ultrasonic_Ping_Back, OUTPUT);
-  pinMode(ci_Ultrasonic_Data_Back, INPUT);
 
-  My_Receiver.enableIRIn(); //Start receiver
+  pinMode(ci_Ultrasonic_Ping_Side_Back, OUTPUT);
+  pinMode(ci_Ultrasonic_Data_Side_Back, INPUT);
 
-  pinMode (A0, INPUT);
+  pinMode(ci_Ultrasonic_Ping_Side_Front, OUTPUT);
+  pinMode(ci_Ultrasonic_Data_Side_Front, INPUT);
+  
+  // set up drive motors
+  pinMode(ci_Right_Motor, OUTPUT);
+  servo_RightMotor.attach(ci_Right_Motor);
+  pinMode(ci_Left_Motor, OUTPUT);
+  servo_LeftMotor.attach(ci_Left_Motor);  
+
 }
 
 void loop() {
-  bt_Enabled = digitalRead(ci_Enable_Switch);
+  //bt_Enabled = digitalRead(ci_Enable_Switch);
 
-  if (bt_Enabled) {
-    if (ui_Current_Task == 1) {
-      locatewall();
-    }
-    else if (ui_Current_Task == 2) {
-      retrievecube();
-    }
-    else if (ui_Current_Task == 3) {
-      locatepyramid();
-    }
-    else if (ui_Current_Task == 4) {
-      retrievepyramid();
-    }
-    else if (ui_Current_Task == 5) {
-      converttesseract();
-    }
+  //if (bt_Enabled) {
+
+  if(countOut == 0){
+    CallibrateUltrasonics();
+    countOut++;
+    servo_Platform.write(105);
+    servo_Shovel.write(180);
+    servo_Stopper.write(75);
   }
+  
+  /*switch(countOut){
+
+    case 1:{
+
+      Wire.onReceive(receiveEvent);
+
+      if ((c>240) && (c<300)){
+
+        servo_LeftMotor.writeMicroseconds(1500);
+        servo_RightMotor.writeMicroseconds(1500);
+        GetCubeInCorner();
+      }
+      
+      DriveToGetCube();
+
+      refTime = millis();
+
+      val = analogRead(A2);
+
+      while((val)>1000){
+        if((millis()-refTime)>300){
+          countOut++;
+          break;
+        }
+      }
+
+      break;
+      
+    }
+
+    case 2:{
+
+      Wire.endTransmission();
+
+      refTime = millis();
+
+      while((millis()-refTime)<2000){
+        servo_LeftMotor.writeMicroseconds(1500);
+        servo_RightMotor.writeMicroseconds(1500);
+      }
+
+      countOut++;
+
+      break;
+      
+    }*/
+
+    //case 3:{
+    if(countOut == 1){
+      FindPyramid();
+
+      if (countTwo == 1){
+        countOut++;
+        Serial.println("YES");
+        servo_LeftMotor.writeMicroseconds(1500);
+        servo_RightMotor.writeMicroseconds(1500);
+      }
+
+      //break;
+    }
+
+    if(countOut == 2){
+      PickUpPyramid();
+
+      if (countTwo == 1){
+        countOut++;
+        Serial.println("YES");
+      }
+
+      //break;
+    }
+
+      
+   // }
+
+    /*case 4:{
+    
+      Serial.println("case 5");
+      
+      servo_LeftMotor.writeMicroseconds(1500);
+      servo_RightMotor.writeMicroseconds(1500);
+
+      servo_Shovel.write(77);
+
+      delay(3000);
+
+      count++;
+
+      refTime = millis();
+
+      break;
+      
+    }
+
+    case 5:{
+    
+      while((millis()-refTime)<1500){
+        servo_LeftMotor.writeMicroseconds(1650);
+        servo_RightMotor.writeMicroseconds(1650);
+        servo_Shovel.write(77);
+      }
+
+      while((millis()-refTime)<2500){
+        servo_LeftMotor.writeMicroseconds(1430);
+        servo_RightMotor.writeMicroseconds(1430);
+        servo_Shovel.write(77);
+      }
+
+      servo_Shovel.write(180);
+
+      count++;
+
+      break;
+      
+    }
+
+    case 6:{
+
+      break;
+      
+    }
+      
+
+    default:{
+      break;
+    }
+
+  }*/
+  //}
 }
 
 
@@ -192,8 +292,8 @@ void PingSideBack()
 }  
 
 void receiveEvent(int howMany){
-    int c = (int(Wire.read()))*5;
-    Serial.println(c);
+    c = (int(Wire.read()))*5;
+    //Serial.println(c);
 }
 
 void DriveToGetCube(){
@@ -208,24 +308,24 @@ void DriveToGetCube(){
 
   else if((ul_Echo_Time_Side_Back_Val <(backUltraVal-20))&&(ul_Echo_Time_Side_Front_Val>=(frontUltraVal-20))){
       servo_LeftMotor.writeMicroseconds(ui_Left_Motor_Speed_Cube);
-      servo_RightMotor.writeMicroseconds(1380);
+      servo_RightMotor.writeMicroseconds(1320);
       Serial.println("TURN RIGHT");
   }
 
   else if((ul_Echo_Time_Side_Front_Val<(frontUltraVal-20))&&(ul_Echo_Time_Side_Back_Val>=(backUltraVal-20))){
-      servo_LeftMotor.writeMicroseconds(1380);
+      servo_LeftMotor.writeMicroseconds(1320);
       servo_RightMotor.writeMicroseconds(ui_Right_Motor_Speed_Cube);
       Serial.println("TURN LEFT");
   }
   
   else if(((ul_Echo_Time_Side_Front_Val)<(frontUltraVal-20))&&((ul_Echo_Time_Side_Back_Val)<(backUltraVal-20))){
       servo_LeftMotor.writeMicroseconds(ui_Left_Motor_Speed_Cube);
-      servo_RightMotor.writeMicroseconds(1380);
+      servo_RightMotor.writeMicroseconds(1320);
       Serial.println("TURN RIGHT");
   }
 
   else if((ul_Echo_Time_Side_Front_Val>(frontUltraVal+20))&&(ul_Echo_Time_Side_Back_Val>(backUltraVal+20))){
-      servo_LeftMotor.writeMicroseconds(1380);
+      servo_LeftMotor.writeMicroseconds(1320);
       servo_RightMotor.writeMicroseconds(ui_Right_Motor_Speed_Cube);
       Serial.println("TURN LEFT");
   }
@@ -303,16 +403,26 @@ void FindPyramid(){
   
   }
 
-  if (count == 1){
+  if (count == 1){ //The pyramid has been located, drive toward the pyramid for 2 seconds
 
+      while((millis()-refTime)<300){
+        PingTop();
+        Serial.println("HHHH");
+        Serial.println(ul_Echo_Time_Top);
+      }
+
+    
     while((millis()-refTime)<2000){
       servo_LeftMotor.writeMicroseconds(1680);
       servo_RightMotor.writeMicroseconds(1680);
 
       PingTop();
 
-      if(ul_Echo_Time_Top>2000){
+      Serial.println(ul_Echo_Time_Top);
+
+      if((ul_Echo_Time_Top>1500)||(ul_Echo_Time_Top == 0)){
         countTwo = 1;
+        count = -5;
         break;
       }
       
@@ -324,27 +434,28 @@ void FindPyramid(){
 
   }
 
-  if (countTwo == 1){
-
-    while(1 == 1){
-      servo_LeftMotor.writeMicroseconds(1500);
-      servo_RightMotor.writeMicroseconds(1500);
-    }
-  
-  }
-
   if (count == 2){
 
   //Serial.println("Turn 2");
-  
-    while((millis()-refTime)<1000){
+
+
+    while((millis()-refTime)<300){
+        PingTop();
+        Serial.println("HHHH");
+        Serial.println(ul_Echo_Time_Top);
+    }
+      
+    while((millis()-refTime)<1300){
       servo_LeftMotor.writeMicroseconds(1350);
       servo_RightMotor.writeMicroseconds(1680);
 
       PingTop();
 
-      if(ul_Echo_Time_Top>2000){
+      Serial.println(ul_Echo_Time_Top);
+
+      if((ul_Echo_Time_Top>1100)||(ul_Echo_Time_Top == 0)){
         countTwo = 1;
+        count = -5;
         break;
       }
     
@@ -357,15 +468,56 @@ void FindPyramid(){
     check = 1;
   }
 
-  if (countTwo == 1){
+}
 
-    while(1 == 1){
-      servo_LeftMotor.writeMicroseconds(1500);
-      servo_RightMotor.writeMicroseconds(1500);
-    }
+void GetCubeInCorner(){
   
+  for (pos = 105, posTwo = 70; pos >= 50; pos--, posTwo++) { // goes from 0 degrees to 180 degrees
+    // in steps of 1 degree
+    servo_Platform.write(pos); 
+    servo_Magnet.write(posTwo);             // tell servo to go to position in variable 'pos'
+    delay(15);                       // waits 15ms for the servo to reach the position
+  }
+    
+}
+
+void PickUpPyramid(){
+  
+  servo_Shovel.write(75);
+  delay(1000);
+
+  while(analogRead(A1)<100){
+  servo_LeftMotor.writeMicroseconds(1630);
+  servo_RightMotor.writeMicroseconds(1630);
   }
 
+  servo_LeftMotor.writeMicroseconds(1500);
+  servo_RightMotor.writeMicroseconds(1500);
+
+  delay(1000);
+  
+  refTime = millis();
+
+  while((millis()-refTime)<1000){
+    servo_LeftMotor.writeMicroseconds(1400);
+    servo_RightMotor.writeMicroseconds(1400);
+  }
+  
+  servo_LeftMotor.writeMicroseconds(1500);
+  servo_RightMotor.writeMicroseconds(1500);
+  
+  servo_Stopper.write(35);
+  delay(1000);
+
+   for (pos = 75; pos <= 180; pos++) { // goes from 0 degrees to 180 degrees
+    // in steps of 1 degree
+    servo_Shovel.write(pos);             // tell servo to go to position in variable 'pos'
+    delay(30);                       // waits 15ms for the servo to reach the position
+  }
+
+  servo_LeftMotor.writeMicroseconds(1400);
+  servo_RightMotor.writeMicroseconds(1400); 
+  
 }
 
 
