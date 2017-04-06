@@ -57,6 +57,9 @@ int c = 0;
 int pos = 0;
 int posTwo = 0;
 int countOut = 0;
+int IRValOne = 0;
+int IRValTwo = 0;
+
 
 void setup() {
 
@@ -119,6 +122,9 @@ void loop() {
     servo_Stopper.write(75);
     servo_Magnet.write(90);
     servo_Platform.write(105);
+    IRValOne = 73;//AE = 65 69, IO = 73 79
+    IRValTwo = 79;
+
   }
   
   switch(countOut){
@@ -136,16 +142,16 @@ void loop() {
       
       DriveToGetCube();
 
-      refTime = millis();
 
-      val = analogRead(A2);
-
-      while((val)>1000){
-        if((millis()-refTime)>600){
+      while(val>1020){
+        if((millis()-refTime)>500){
           countOut++;
           break;
         }
+        val = analogRead(A2);
       }
+
+      refTime = millis();
 
       break;
       
@@ -221,9 +227,21 @@ void loop() {
 
     refTime = millis();
     
-    while((millis()-refTime)<2050){
+    while((millis()-refTime)<2100){
         servo_LeftMotor.writeMicroseconds(1400);
         servo_RightMotor.writeMicroseconds(1400);
+     }
+
+     refTime = millis();
+
+     while((millis()-refTime)<200){
+        servo_LeftMotor.writeMicroseconds(1390);
+        servo_RightMotor.writeMicroseconds(1650);
+     }
+
+     while((millis()-refTime)<280){
+        servo_LeftMotor.writeMicroseconds(1650);
+        servo_RightMotor.writeMicroseconds(1390);
      }
 
      servo_LeftMotor.writeMicroseconds(1500);
@@ -241,7 +259,7 @@ void loop() {
 
      refTime = millis();
 
-     if((millis()-refTime)<2000){
+     while((millis()-refTime)<2000){
         servo_LeftMotor.writeMicroseconds(1350);
         servo_RightMotor.writeMicroseconds(1350);
      }
@@ -254,8 +272,9 @@ void loop() {
 
     case 6:{
 
-      servo_LeftMotor.writeMicroseconds(1350);
-      servo_RightMotor.writeMicroseconds(1350);
+      servo_LeftMotor.writeMicroseconds(1500);
+      servo_RightMotor.writeMicroseconds(1500);
+      
       break;
       
     }
@@ -322,31 +341,31 @@ void DriveToGetCube(){
   if((ul_Echo_Time_Side_Front_Val>=(frontUltraVal-20))&&(ul_Echo_Time_Side_Front_Val<=(frontUltraVal+20))&&(ul_Echo_Time_Side_Back_Val>=(backUltraVal-20))&&(ul_Echo_Time_Side_Back_Val<=(backUltraVal+20))){
       servo_LeftMotor.writeMicroseconds(ui_Left_Motor_Speed_Cube);
       servo_RightMotor.writeMicroseconds(ui_Right_Motor_Speed_Cube);
-      Serial.println("STRAIGHT");
+      //Serial.println("STRAIGHT");
   }
 
   else if((ul_Echo_Time_Side_Back_Val <(backUltraVal-20))&&(ul_Echo_Time_Side_Front_Val>=(frontUltraVal-20))){
       servo_LeftMotor.writeMicroseconds(ui_Left_Motor_Speed_Cube);
       servo_RightMotor.writeMicroseconds(1320);
-      Serial.println("TURN RIGHT");
+      //Serial.println("TURN RIGHT");
   }
 
   else if((ul_Echo_Time_Side_Front_Val<(frontUltraVal-20))&&(ul_Echo_Time_Side_Back_Val>=(backUltraVal-20))){
       servo_LeftMotor.writeMicroseconds(1320);
       servo_RightMotor.writeMicroseconds(ui_Right_Motor_Speed_Cube);
-      Serial.println("TURN LEFT");
+      //Serial.println("TURN LEFT");
   }
   
   else if(((ul_Echo_Time_Side_Front_Val)<(frontUltraVal-20))&&((ul_Echo_Time_Side_Back_Val)<(backUltraVal-20))){
       servo_LeftMotor.writeMicroseconds(ui_Left_Motor_Speed_Cube);
       servo_RightMotor.writeMicroseconds(1320);
-      Serial.println("TURN RIGHT");
+      //Serial.println("TURN RIGHT");
   }
 
   else if((ul_Echo_Time_Side_Front_Val>(frontUltraVal+20))&&(ul_Echo_Time_Side_Back_Val>(backUltraVal+20))){
       servo_LeftMotor.writeMicroseconds(1320);
       servo_RightMotor.writeMicroseconds(ui_Right_Motor_Speed_Cube);
-      Serial.println("TURN LEFT");
+      //Serial.println("TURN LEFT");
   }
 }
 
@@ -409,7 +428,7 @@ void FindPyramid(){
     servo_LeftMotor.writeMicroseconds(1380);
     servo_RightMotor.writeMicroseconds(1650);
 
-    if ((val == 69) || (val == 65)){
+    if ((val == IRValOne) || (val == IRValTwo)){
 
       servo_LeftMotor.writeMicroseconds(1500);
       servo_RightMotor.writeMicroseconds(1500);
