@@ -45,6 +45,8 @@ unsigned long ul_Echo_Time_Side_Front_Val = 0;
 unsigned long refTime = 0;
 unsigned long backUltraVal = 0;
 unsigned long frontUltraVal = 0;
+unsigned long refTimeTwo = 0;
+
 
 int count = 0;
 int pingPrev = 0;
@@ -175,6 +177,8 @@ void loop() {
 
       countOut++;
 
+      refTimeTwo = millis();
+
       break;
       
     }
@@ -188,6 +192,10 @@ void loop() {
         Serial.println("YES");
         servo_LeftMotor.writeMicroseconds(1500);
         servo_RightMotor.writeMicroseconds(1500);
+      }
+
+      if((millis() - refTimeTwo)>15000){
+        countOut = 2;
       }
 
       break;
