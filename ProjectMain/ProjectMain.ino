@@ -163,9 +163,14 @@ void loop() {
 
       refTime = millis();
 
-      while((millis()-refTime)<2000){
-        servo_LeftMotor.writeMicroseconds(1500);
-        servo_RightMotor.writeMicroseconds(1500);
+      while((millis()-refTime)<1100){
+        servo_LeftMotor.writeMicroseconds(1380);
+        servo_RightMotor.writeMicroseconds(1650);
+      }
+
+      while((millis()-refTime)<4100){
+        servo_LeftMotor.writeMicroseconds(1680);
+        servo_RightMotor.writeMicroseconds(1680);
       }
 
       countOut++;
@@ -227,19 +232,24 @@ void loop() {
 
     refTime = millis();
     
-    while((millis()-refTime)<2100){
+    while((millis()-refTime)<2300){
         servo_LeftMotor.writeMicroseconds(1400);
         servo_RightMotor.writeMicroseconds(1400);
      }
 
      refTime = millis();
 
-     while((millis()-refTime)<200){
+     while((millis()-refTime)<100){
+        servo_LeftMotor.writeMicroseconds(1650);
+        servo_RightMotor.writeMicroseconds(1650);
+     }
+     
+     while((millis()-refTime)<350){
         servo_LeftMotor.writeMicroseconds(1390);
         servo_RightMotor.writeMicroseconds(1650);
      }
 
-     while((millis()-refTime)<280){
+     while((millis()-refTime)<430){
         servo_LeftMotor.writeMicroseconds(1650);
         servo_RightMotor.writeMicroseconds(1390);
      }
